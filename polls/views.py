@@ -1,9 +1,11 @@
+from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
 
 # Create your views here.
 from django.http import HttpResponse, HttpResponseRedirect
 from .models import Question, Choice
 from django.urls import reverse
+from .forms import questionForm
 
 
 
@@ -27,7 +29,6 @@ def vote(request, question_id):
     try:
         selected_choice = question.choice_set.get(pk=request.POST['choice'])
     except (KeyError, Choice.DoesNotExist):
-        # Redisplay the question voting form.
         return render(request, 'polls/detail.html', {
             'question': question,
             'error_message': "You didn't select a choice.",
@@ -35,7 +36,24 @@ def vote(request, question_id):
     else:
         selected_choice.votes += 1
         selected_choice.save()
-        # Always return an HttpResponseRedirect after successfully dealing
-        # with POST data. This prevents data from being posted twice if a
-        # user hits the Back button.
         return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+
+
+def newquestion(request):
+    if request.method == 'POST':
+        form = questionForm(request.POST)
+        if form.is_valid():
+            return HttpResponseRedirect('/thanks/')
+    else:
+        form = questionForm()
+
+    return render(request, 'polls/question_form.html', {'form': form})
+
+
+def createquestion(request):
+    print(request.POST)
+    questionText = request.POST['new_question']
+    newQuestion = Question(question_text=questionText, pub_date=timezone.now())
+
+    newQuestion.save()
+    return render(request, 'polls/saved_question.html')
