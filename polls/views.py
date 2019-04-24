@@ -15,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 
 @login_required
 def index(request):
-    latest_question_list = Question.objects.order_by('-pub_date')[:5]
+    latest_question_list = Question.objects.order_by('-pub_date')[:10]
     context = {
         'latest_question_list': latest_question_list,
     }
@@ -30,18 +30,22 @@ def results(request, question_id):
     return render(request, 'polls/results.html', {'question': question})
     
 def vote(request, question_id):
+    print(request.user.username)
     question = get_object_or_404(Question, pk=question_id)
-    try:
-        selected_choice = question.choice_set.get(pk=request.POST['choice'])
-    except (KeyError, Choice.DoesNotExist):
-        return render(request, 'polls/detail.html', {
-            'question': question,
-            'error_message': "You didn't select a choice.",
-        })
+    if request.user.username == question.username:
+        return render(request, 'polls/error_response.html', {'question': question})
     else:
-        selected_choice.votes += 1
-        selected_choice.save()
-        return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+        try:
+            selected_choice = question.choice_set.get(pk=request.POST['choice'])
+        except (KeyError, Choice.DoesNotExist):
+            return render(request, 'polls/detail.html', {
+                'question': question,
+                'error_message': "You didn't select a choice.",
+            })
+        else:
+            selected_choice.votes += 1
+            selected_choice.save()
+            return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
 
 
 def newquestion(request):
@@ -57,7 +61,7 @@ def newquestion(request):
 
 def createquestion(request):
     questionText = request.POST['new_question']
-    createdQuestion = Question(question_text=questionText, pub_date=timezone.now())
+    createdQuestion = Question(question_text=questionText, pub_date=timezone.now(), username=request.user.username)
 
     createdQuestion.save()
     
