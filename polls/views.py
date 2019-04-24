@@ -53,7 +53,17 @@ def newquestion(request):
 def createquestion(request):
     print(request.POST)
     questionText = request.POST['new_question']
-    newQuestion = Question(question_text=questionText, pub_date=timezone.now())
+    createdQuestion = Question(question_text=questionText, pub_date=timezone.now())
 
-    newQuestion.save()
+    createdQuestion.save()
+    
+    choiceOne = request.POST['choice_one']
+    createdQuestion.choice_set.create(choice_text=choiceOne, votes=0)
+    
+    choiceTwo = request.POST['choice_two']
+    createdQuestion.choice_set.create(choice_text=choiceTwo, votes=0)
+
+    choiceThree = request.POST['choice_three']
+    createdQuestion.choice_set.create(choice_text=choiceThree, votes=0)
+
     return render(request, 'polls/saved_question.html')
