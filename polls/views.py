@@ -1,14 +1,19 @@
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
+from rest_framework.response import Response
+from .serializers import QuestionSerializer, ChoiceSerializer
+from rest_framework.views import APIView
+from rest_framework import status
 
 # Create your views here.
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from .models import Question, Choice
 from django.urls import reverse
 from .forms import questionForm
+from django.contrib.auth.decorators import login_required
 
 
-
+@login_required
 def index(request):
     latest_question_list = Question.objects.order_by('-pub_date')[:5]
     context = {
@@ -51,7 +56,6 @@ def newquestion(request):
 
 
 def createquestion(request):
-    print(request.POST)
     questionText = request.POST['new_question']
     createdQuestion = Question(question_text=questionText, pub_date=timezone.now())
 
@@ -67,3 +71,17 @@ def createquestion(request):
     createdQuestion.choice_set.create(choice_text=choiceThree, votes=0)
 
     return render(request, 'polls/saved_question.html')
+
+
+class jsonreponse(APIView):
+    def get(self, request, format=None):
+        pollsQuestion = Question.objects.all()
+        serializer =  QuestionSerializer(pollsQuestion, many=True)
+        return Response({"pollsQuestion": serializer.data})
+
+    def post(self, request, format=None):
+        pollsQuestion = request.data.get('pollsQuestion')   
+        serializer = QuestionSerializer(data=pollsQuestion)
+        if serializer.is_valid(raise_exception=True):
+            pollsQuestion_saved = serializer.save()
+        return Response(serializer.data)
