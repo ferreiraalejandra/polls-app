@@ -52,7 +52,7 @@ def newquestion(request):
     if request.method == 'POST':
         form = questionForm(request.POST)
         if form.is_valid():
-            return HttpResponseRedirect('/thanks/')
+            return HttpResponseRedirect()
     else:
         form = questionForm()
 
@@ -77,15 +77,8 @@ def createquestion(request):
     return render(request, 'polls/saved_question.html')
 
 
-class jsonreponse(APIView):
-    def get(self, request, format=None):
+class jsonresponse(APIView):
+    def get(self, request):
         pollsQuestion = Question.objects.all()
         serializer =  QuestionSerializer(pollsQuestion, many=True)
         return Response({"pollsQuestion": serializer.data})
-
-    def post(self, request, format=None):
-        pollsQuestion = request.data.get('pollsQuestion')   
-        serializer = QuestionSerializer(data=pollsQuestion)
-        if serializer.is_valid(raise_exception=True):
-            pollsQuestion_saved = serializer.save()
-        return Response(serializer.data)

@@ -1,5 +1,4 @@
 from django import forms
-from .models import Question, Choice
 
 
 class questionForm(forms.Form):
