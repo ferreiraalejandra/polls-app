@@ -11,5 +11,5 @@ urlpatterns = [
     path('<int:question_id>/vote/', views.vote, name='vote'),
     path('question_form/', views.newquestion, name='newquestion'),
     path('create-question/', views.createquestion, name='createquestion'),
-    path('pollsQuestion/', jsonresponse.as_view(), name='jsonresponse'),
+    path('api/', jsonresponse.as_view(), name='jsonresponse'),
 ]

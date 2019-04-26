@@ -49,36 +49,60 @@ def vote(request, question_id):
 
 
 def newquestion(request):
-    if request.method == 'POST':
-        form = questionForm(request.POST)
-        if form.is_valid():
-            return HttpResponseRedirect()
-    else:
-        form = questionForm()
-
+    form = questionForm()
     return render(request, 'polls/question_form.html', {'form': form})
+
 
 
 def createquestion(request):
     questionText = request.POST['new_question']
-    createdQuestion = Question(question_text=questionText, pub_date=timezone.now(), username=request.user.username)
+    choiceOne = request.POST['choice_one']
+    choiceTwo = request.POST['choice_two']
+    choiceThree = request.POST['choice_three']
+    username = request.user.username
 
+    createdQuestion = Question(question_text=questionText, pub_date=timezone.now(), username=username)
     createdQuestion.save()
     
-    choiceOne = request.POST['choice_one']
     createdQuestion.choice_set.create(choice_text=choiceOne, votes=0)
-    
-    choiceTwo = request.POST['choice_two']
     createdQuestion.choice_set.create(choice_text=choiceTwo, votes=0)
-
-    choiceThree = request.POST['choice_three']
     createdQuestion.choice_set.create(choice_text=choiceThree, votes=0)
 
     return render(request, 'polls/saved_question.html')
 
 
-class jsonresponse(APIView):
+
+class JSONResponse(APIView):
     def get(self, request):
         pollsQuestion = Question.objects.all()
+        # pollsChoices = Choice.objects.all()
+
+        # pollsElements = [
+        #     {
+        #         'pollsQuestion': pollsQuestion, 'pollsChoices': pollsQuestion, 
+        #     },
+        # ]
+        # import pdb
+        # pdb.set_trace()
         serializer =  QuestionSerializer(pollsQuestion, many=True)
-        return Response({"pollsQuestion": serializer.data})
+        print(serializer.data)
+        return Response({"questions": serializer.data})
+
+    def post(self, request):
+        questionText = request.data.get('new_question')
+        # choiceOne = request.data.get('choice_one')
+        # choiceTwo = request.data.get('choice_two')
+        # choiceThree = request.data.get('choice_three')
+        # username = request.data.get('username')
+
+        # createdQuestion = Question(question_text=questionText, pub_date=timezone.now(), username=username)
+        # createdQuestion.save()
+        
+        # createdQuestion.choice_set.create(choice_text=choiceOne, votes=0)
+        # createdQuestion.choice_set.create(choice_text=choiceTwo, votes=0)
+        # createdQuestion.choice_set.create(choice_text=choiceThree, votes=0)
+
+        serializer = QuestionSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response({"Success": "Question was created successfully"})
